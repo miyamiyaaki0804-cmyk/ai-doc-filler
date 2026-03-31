@@ -229,5 +229,8 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  // ✅ サーバーはリクエストデータを一切保存・キャッシュしない
+  // parsed には完成ファイルの「入力指示（JSON）」のみが含まれる
+  // 元データ・テンプレートデータはこの関数スコープ終了とともに即座に破棄される
   return NextResponse.json(parsed);
 }

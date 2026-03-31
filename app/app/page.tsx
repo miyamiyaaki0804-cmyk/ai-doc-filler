@@ -559,6 +559,12 @@ export default function Home() {
       const url = URL.createObjectURL(blob);
       setDownloadUrl(url);
       setDownloadName(filename);
+
+      // ✅ 元データ・テンプレートをメモリから即座に消去
+      // 完成ファイル（blob URL）だけを残す
+      setSourceFile(null);
+      setTemplateFile(null);
+
       setStep("done");
     } catch (err) {
       console.error(err);
