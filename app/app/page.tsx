@@ -120,24 +120,58 @@ async function generateExcelBlob(
   cells: FilledCell[]
 ): Promise<Blob> {
   const XLSX = await import("xlsx");
+
   // .slice(0) で防御的コピー → テンプレートの元ファイルは一切変更しない
   const buffer = (await templateFile.arrayBuffer()).slice(0);
-  const wb = XLSX.read(buffer, { type: "array" });
+
+  // cellStyles: true で書式（色・フォント・罫線）を保持して読み込み
+  const wb = XLSX.read(buffer, {
+    type: "array",
+    cellStyles: true,
+    cellDates: true,   // 日付セルを Date オブジェクトとして扱う
+    cellNF: true,      // 数値フォーマット文字列を保持
+  });
 
   for (const c of cells) {
     const ws = wb.Sheets[c.sheet];
     if (!ws) continue;
     const ref = XLSX.utils.encode_cell({ r: c.row, c: c.col });
-    const isNum = typeof c.value === "number";
+
+    // 値に応じてセル型を自動判定
+    const existing = ws[ref] || {};
+    let cellType: string;
+    let cellValue = c.value;
+
+    if (typeof c.value === "number") {
+      cellType = "n"; // 数値
+    } else if (typeof c.value === "boolean") {
+      cellType = "b"; // ブール
+    } else {
+      // 数値文字列は数値型に変換（例: "1234" → 1234）
+      const num = Number(c.value);
+      if (c.value !== "" && !isNaN(num)) {
+        cellType = "n";
+        cellValue = num;
+      } else {
+        cellType = "s"; // 文字列
+      }
+    }
+
     ws[ref] = {
-      ...(ws[ref] || {}),
-      v: c.value,
-      t: isNum ? "n" : "s",
-      w: String(c.value),
+      ...existing,       // 既存の書式・スタイルを引き継ぐ
+      v: cellValue,
+      t: cellType,
+      w: String(cellValue), // 表示文字列
     };
   }
 
-  const out = XLSX.write(wb, { type: "array", bookType: "xlsx" });
+  // Excel 形式（.xlsx）で書き出し・書式を保持
+  const out = XLSX.write(wb, {
+    type: "array",
+    bookType: "xlsx",
+    cellStyles: true,  // 書式を出力にも反映
+  });
+
   return new Blob([out], {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
@@ -542,7 +576,9 @@ export default function Home() {
 
       if (templateKind === "excel") {
         blob = await generateExcelBlob(templateFile, result.cells ?? []);
-        filename = `filled_${templateFile.name}`;
+        // 拡張子を必ず .xlsx に統一（.xls → .xlsx も変換）
+        const baseName = templateFile.name.replace(/\.(xls|xlsx|csv)$/i, "");
+        filename = `filled_${baseName}.xlsx`;
       } else {
         blob = await generateWordBlob(result.sections ?? []);
         // Ensure .docx extension
