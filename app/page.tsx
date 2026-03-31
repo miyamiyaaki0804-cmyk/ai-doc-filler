@@ -78,10 +78,13 @@ function kindIcon(kind: FileKind) {
 
 /* ------------------------------------------------------------------ */
 /*  File extraction (client-side, no server)                           */
+/*  ⚠️ 元ファイルは絶対に変更しない: File オブジェクトは読み取り専用、    */
+/*     arrayBuffer() は毎回新しいコピーを返す（ブラウザ仕様）           */
 /* ------------------------------------------------------------------ */
 async function extractExcel(file: File): Promise<ExtractedExcel> {
   const XLSX = await import("xlsx");
-  const buffer = await file.arrayBuffer();
+  // .slice(0) で防御的コピーを作成 → 元データへの副作用を完全にゼロに
+  const buffer = (await file.arrayBuffer()).slice(0);
   const workbook = XLSX.read(buffer, { type: "array" });
   const sheets: SheetData[] = workbook.SheetNames.map((name) => {
     const ws = workbook.Sheets[name];
@@ -96,7 +99,8 @@ async function extractExcel(file: File): Promise<ExtractedExcel> {
 
 async function extractWord(file: File): Promise<ExtractedWord> {
   const mammoth = await import("mammoth");
-  const buffer = await file.arrayBuffer();
+  // .slice(0) で防御的コピーを作成 → 元データへの副作用を完全にゼロに
+  const buffer = (await file.arrayBuffer()).slice(0);
   const result = await mammoth.extractRawText({ arrayBuffer: buffer });
   return { type: "word", text: result.value };
 }
@@ -116,7 +120,8 @@ async function generateExcelBlob(
   cells: FilledCell[]
 ): Promise<Blob> {
   const XLSX = await import("xlsx");
-  const buffer = await templateFile.arrayBuffer();
+  // .slice(0) で防御的コピー → テンプレートの元ファイルは一切変更しない
+  const buffer = (await templateFile.arrayBuffer()).slice(0);
   const wb = XLSX.read(buffer, { type: "array" });
 
   for (const c of cells) {
@@ -644,6 +649,7 @@ export default function Home() {
           {sourceFile && (
             <p className="text-xs text-gray-400 mt-2 ml-1">
               ✓ AIがこのファイルからデータを読み取ります
+              <span className="ml-2 text-green-600 font-medium">🔒 元ファイルは変更されません</span>
             </p>
           )}
         </section>
@@ -667,6 +673,7 @@ export default function Home() {
           {templateFile && sourceFile && (
             <p className="text-xs text-gray-400 mt-2 ml-1">
               ✓ AIが①のデータをこのテンプレートへ自動マッピングします
+              <span className="ml-2 text-green-600 font-medium">🔒 元ファイルは変更されません</span>
             </p>
           )}
           {templateFile && sourceFile && getFileKind(templateFile) !== getFileKind(sourceFile) && (
