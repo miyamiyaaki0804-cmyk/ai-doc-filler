@@ -480,8 +480,10 @@ export default function Home() {
     };
   }, [downloadUrl]);
 
+  // 環境変数にキーが設定済みの場合はUI入力不要
+  const serverHasKey = process.env.NEXT_PUBLIC_HAS_API_KEY === "true";
   const canProcess =
-    sourceFile && templateFile && apiKey.trim().length > 10 && step === "idle";
+    sourceFile && templateFile && (serverHasKey || apiKey.trim().length > 10) && step === "idle";
 
   const reset = () => {
     setStep("idle");
@@ -683,51 +685,62 @@ export default function Home() {
           )}
         </section>
 
-        {/* Card 3: API Key */}
-        <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center gap-2 mb-4">
+        {/* Card 3: API Key（環境変数設定済みなら非表示） */}
+        {serverHasKey ? (
+          <section className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center gap-3">
             <span className="text-xl">🔑</span>
-            <h2 className="font-bold text-gray-800">③ Anthropic APIキー</h2>
-            <a
-              href="https://console.anthropic.com/keys"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="ml-auto text-xs text-indigo-500 hover:underline"
-            >
-              キーを取得 →
-            </a>
-          </div>
-          <div className="relative">
-            <input
-              type={showKey ? "text" : "password"}
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="sk-ant-api03-..."
-              disabled={isProcessing}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-mono bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-transparent disabled:opacity-50 pr-12"
-            />
-            <button
-              type="button"
-              onClick={() => setShowKey(!showKey)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg"
-            >
-              {showKey ? "🙈" : "👁️"}
-            </button>
-          </div>
-          <div className="flex items-center gap-2 mt-3">
-            <input
-              id="save-key"
-              type="checkbox"
-              checked={saveKey}
-              onChange={(e) => setSaveKey(e.target.checked)}
-              className="rounded accent-indigo-500"
-              disabled={isProcessing}
-            />
-            <label htmlFor="save-key" className="text-xs text-gray-500 cursor-pointer">
-              このブラウザに保存する（サーバーへは送信しません）
-            </label>
-          </div>
-        </section>
+            <div>
+              <p className="text-sm font-semibold text-green-800">③ APIキー設定済み</p>
+              <p className="text-xs text-green-600">サーバーの環境変数から自動で読み込まれます</p>
+            </div>
+            <span className="ml-auto text-green-500 text-lg">✓</span>
+          </section>
+        ) : (
+          <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xl">🔑</span>
+              <h2 className="font-bold text-gray-800">③ Anthropic APIキー</h2>
+              <a
+                href="https://console.anthropic.com/keys"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-auto text-xs text-indigo-500 hover:underline"
+              >
+                キーを取得 →
+              </a>
+            </div>
+            <div className="relative">
+              <input
+                type={showKey ? "text" : "password"}
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="sk-ant-api03-..."
+                disabled={isProcessing}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-mono bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-transparent disabled:opacity-50 pr-12"
+              />
+              <button
+                type="button"
+                onClick={() => setShowKey(!showKey)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg"
+              >
+                {showKey ? "🙈" : "👁️"}
+              </button>
+            </div>
+            <div className="flex items-center gap-2 mt-3">
+              <input
+                id="save-key"
+                type="checkbox"
+                checked={saveKey}
+                onChange={(e) => setSaveKey(e.target.checked)}
+                className="rounded accent-indigo-500"
+                disabled={isProcessing}
+              />
+              <label htmlFor="save-key" className="text-xs text-gray-500 cursor-pointer">
+                このブラウザに保存する（サーバーへは送信しません）
+              </label>
+            </div>
+          </section>
+        )}
 
         {/* Card 4: Process & Result */}
         <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4">

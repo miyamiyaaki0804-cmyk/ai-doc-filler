@@ -130,7 +130,7 @@ ${templateStr}
 /* ------------------------------------------------------------------ */
 export async function POST(request: NextRequest) {
   let body: {
-    apiKey: string;
+    apiKey?: string;
     sourceData: ExtractedData;
     templateData: ExtractedData;
     templateType: "excel" | "word";
@@ -144,14 +144,17 @@ export async function POST(request: NextRequest) {
 
   const { apiKey, sourceData, templateData, templateType } = body;
 
-  if (!apiKey || !sourceData || !templateData || !templateType) {
+  // 環境変数優先、なければクライアントから受け取ったキーを使用
+  const resolvedKey = process.env.ANTHROPIC_API_KEY || apiKey || "";
+
+  if (!resolvedKey || !sourceData || !templateData || !templateType) {
     return NextResponse.json(
-      { error: "必須パラメータが不足しています。" },
+      { error: "APIキーが設定されていません。Vercelの環境変数またはUI上で入力してください。" },
       { status: 400 }
     );
   }
 
-  if (!apiKey.startsWith("sk-ant-")) {
+  if (!resolvedKey.startsWith("sk-ant-")) {
     return NextResponse.json(
       { error: "Anthropic APIキーの形式が正しくありません（sk-ant- で始まる必要があります）。" },
       { status: 400 }
@@ -164,7 +167,7 @@ export async function POST(request: NextRequest) {
   /* Call Claude */
   let rawText: string;
   try {
-    const client = new Anthropic({ apiKey });
+    const client = new Anthropic({ apiKey: resolvedKey });
 
     const message = await client.messages.create({
       model: "claude-opus-4-5",
