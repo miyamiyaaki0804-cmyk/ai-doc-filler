@@ -1,6 +1,9 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 
+// Vercel: 最大60秒まで許可（Proプランは60s、Hobbyは10s）
+export const maxDuration = 60;
+
 /* ------------------------------------------------------------------ */
 /*  Types                                                               */
 /* ------------------------------------------------------------------ */
