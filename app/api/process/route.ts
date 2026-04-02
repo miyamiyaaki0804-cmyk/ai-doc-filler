@@ -1,12 +1,12 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
 
-// Vercel: 最大60秒まで許可（Proプランは60s、Hobbyは10s）
+// Vercel: 最大60秒まで許可
 export const maxDuration = 60;
 
 // ⚠️ 安全設計: このAPIルートはデータを「読み取り・分析」するのみ。
 // 元ファイルのバイナリデータはサーバーに送信されず、変更・保存も一切しない。
-// Claude APIへはテキスト抽出済みのデータのみ送信する。
+// Gemini APIへはテキスト抽出済みのデータのみ送信する。
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                               */
@@ -41,7 +41,7 @@ function buildPrompt(
       ? JSON.stringify(
           sourceData.sheets.map((s) => ({
             sheet: s.name,
-            rows: s.data.slice(0, 200), // cap for token safety
+            rows: s.data.slice(0, 200),
           })),
           null,
           2
@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
   const { apiKey, sourceData, templateData, templateType } = body;
 
   // 環境変数優先、なければクライアントから受け取ったキーを使用
-  const resolvedKey = process.env.ANTHROPIC_API_KEY || apiKey || "";
+  const resolvedKey = process.env.GEMINI_API_KEY || apiKey || "";
 
   if (!resolvedKey || !sourceData || !templateData || !templateType) {
     return NextResponse.json(
@@ -154,9 +154,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!resolvedKey.startsWith("sk-ant-")) {
+  if (!resolvedKey.startsWith("AIza")) {
     return NextResponse.json(
-      { error: "Anthropic APIキーの形式が正しくありません（sk-ant- で始まる必要があります）。" },
+      { error: "Gemini APIキーの形式が正しくありません（AIza で始まる必要があります）。" },
       { status: 400 }
     );
   }
@@ -164,73 +164,55 @@ export async function POST(request: NextRequest) {
   /* Build prompt */
   const prompt = buildPrompt(sourceData, templateData, templateType);
 
-  /* Call Claude */
+  /* Call Gemini */
   let rawText: string;
   try {
-    const client = new Anthropic({ apiKey: resolvedKey });
+    const genAI = new GoogleGenerativeAI(resolvedKey);
+    // gemini-1.5-flash は無料枠あり（1日1500リクエスト）
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    const message = await client.messages.create({
-      model: "claude-opus-4-5",
-      max_tokens: 4096,
-      messages: [{ role: "user", content: prompt }],
-    });
-
-    const block = message.content[0];
-    if (block.type !== "text") {
-      throw new Error("Claudeからテキスト応答が得られませんでした。");
-    }
-    rawText = block.text;
+    const result = await model.generateContent(prompt);
+    rawText = result.response.text();
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
-    const isAuthErr = msg.includes("401") || msg.includes("authentication");
+    const isAuthErr = msg.includes("API_KEY_INVALID") || msg.includes("401") || msg.includes("403");
     return NextResponse.json(
       {
         error: isAuthErr
-          ? "APIキーが無効です。Anthropicコンソールで確認してください。"
-          : `Claude APIエラー: ${msg}`,
+          ? "APIキーが無効です。Google AI Studioで確認してください。"
+          : `Gemini APIエラー: ${msg}`,
       },
       { status: 500 }
     );
   }
 
-  /* Parse JSON from Claude's response */
+  /* Parse JSON from Gemini's response */
   let parsed: { type: string; cells?: unknown[]; sections?: unknown[] };
   try {
-    // Strip possible markdown code fences
     const cleaned = rawText
       .replace(/^```(?:json)?\s*/i, "")
       .replace(/\s*```\s*$/i, "")
       .trim();
     parsed = JSON.parse(cleaned);
   } catch {
-    // Try to extract JSON substring
     const match = rawText.match(/\{[\s\S]*\}/);
     if (match) {
       try {
         parsed = JSON.parse(match[0]);
       } catch {
         return NextResponse.json(
-          {
-            error:
-              "AIの応答を解析できませんでした。再度お試しください。",
-            raw: rawText.slice(0, 500),
-          },
+          { error: "AIの応答を解析できませんでした。再度お試しください。", raw: rawText.slice(0, 500) },
           { status: 500 }
         );
       }
     } else {
       return NextResponse.json(
-        {
-          error: "AIの応答にJSON形式のデータが含まれていませんでした。",
-          raw: rawText.slice(0, 500),
-        },
+        { error: "AIの応答にJSON形式のデータが含まれていませんでした。", raw: rawText.slice(0, 500) },
         { status: 500 }
       );
     }
   }
 
   // ✅ サーバーはリクエストデータを一切保存・キャッシュしない
-  // parsed には完成ファイルの「入力指示（JSON）」のみが含まれる
-  // 元データ・テンプレートデータはこの関数スコープ終了とともに即座に破棄される
   return NextResponse.json(parsed);
 }

@@ -642,7 +642,7 @@ export default function Home() {
           </div>
           <div className="ml-auto flex items-center gap-1.5 text-xs bg-green-50 text-green-700 px-3 py-1 rounded-full border border-green-200">
             <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-            Claude Powered
+            Gemini Powered
           </div>
         </div>
       </header>
@@ -741,14 +741,14 @@ export default function Home() {
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center gap-2 mb-4">
               <span className="text-xl">🔑</span>
-              <h2 className="font-bold text-gray-800">③ Anthropic APIキー</h2>
+              <h2 className="font-bold text-gray-800">③ Gemini APIキー（無料）</h2>
               <a
-                href="https://console.anthropic.com/keys"
+                href="https://aistudio.google.com/apikey"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="ml-auto text-xs text-indigo-500 hover:underline"
               >
-                キーを取得 →
+                無料で取得 →
               </a>
             </div>
             <div className="relative">
@@ -756,7 +756,7 @@ export default function Home() {
                 type={showKey ? "text" : "password"}
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
-                placeholder="sk-ant-api03-..."
+                placeholder="AIzaSy..."
                 disabled={isProcessing}
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-mono bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-transparent disabled:opacity-50 pr-12"
               />
@@ -874,7 +874,7 @@ export default function Home() {
             <div className="grid grid-cols-3 gap-3 pt-1">
               {[
                 { icon: "🔒", text: "ファイルはサーバーに保存されません" },
-                { icon: "🧠", text: "Claude AI が内容を理解してマッピング" },
+                { icon: "🧠", text: "Gemini AI が内容を理解してマッピング" },
                 { icon: "⚡", text: "数秒〜数十秒で生成完了" },
               ].map((item) => (
                 <div
@@ -900,12 +900,12 @@ export default function Home() {
           <p>
             Powered by{" "}
             <a
-              href="https://www.anthropic.com"
+              href="https://aistudio.google.com"
               target="_blank"
               rel="noopener noreferrer"
               className="text-indigo-400 hover:underline"
             >
-              Anthropic Claude
+              Google Gemini
             </a>
             {" · "}
             <a

@@ -27,7 +27,7 @@ export default function LandingPage() {
         <div className="max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 bg-indigo-100 text-indigo-700 text-xs font-semibold px-4 py-1.5 rounded-full mb-6">
             <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse" />
-            Claude AI 搭載
+            Gemini AI 搭載（無料）
           </div>
 
           <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight mb-6">
@@ -219,7 +219,7 @@ export default function LandingPage() {
               {
                 icon: "💰",
                 title: "自分のAPIキーで使える",
-                desc: "Anthropic APIキーを入力するだけ。従量課金なので使った分だけ支払い。",
+                desc: "Google Gemini APIキーを入力するだけ。無料枠内なら費用ゼロで使えます。",
               },
             ].map((f) => (
               <div
@@ -270,7 +270,7 @@ export default function LandingPage() {
           </h2>
           <p className="text-indigo-200 mb-10 text-base leading-relaxed">
             アカウント登録不要。<br />
-            Anthropic APIキーだけあればすぐ使えます。
+            Google Gemini APIキーだけあればすぐ使えます。
           </p>
           <Link
             href="/app"
@@ -281,12 +281,12 @@ export default function LandingPage() {
           <p className="text-xs text-indigo-300 mt-6">
             APIキーの取得は{" "}
             <a
-              href="https://console.anthropic.com/keys"
+              href="https://aistudio.google.com/apikey"
               target="_blank"
               rel="noopener noreferrer"
               className="underline hover:text-white"
             >
-              console.anthropic.com
+              aistudio.google.com/apikey
             </a>{" "}
             から
           </p>
@@ -301,7 +301,7 @@ export default function LandingPage() {
           </div>
           <span className="font-semibold text-gray-600">AI Doc Filler</span>
         </div>
-        <p>Powered by Anthropic Claude · ファイルはブラウザ内で処理されます</p>
+        <p>Powered by Google Gemini · ファイルはブラウザ内で処理されます</p>
         <p className="mt-1">
           <a
             href="https://github.com/miyamiyaaki0804-cmyk/ai-doc-filler"
