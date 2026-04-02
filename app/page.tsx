@@ -302,6 +302,10 @@ export default function LandingPage() {
           <span className="font-semibold text-gray-600">AI Doc Filler</span>
         </div>
         <p>Powered by Google Gemini · ファイルはブラウザ内で処理されます</p>
+        <div className="flex justify-center gap-4 mt-2 text-xs">
+          <Link href="/howto" className="text-indigo-400 hover:underline">使い方・機能一覧</Link>
+          <Link href="/privacy" className="text-indigo-400 hover:underline">プライバシーポリシー</Link>
+        </div>
         <p className="mt-1">
           <a
             href="https://github.com/miyamiyaaki0804-cmyk/ai-doc-filler"

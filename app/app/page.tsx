@@ -894,6 +894,10 @@ export default function Home() {
 
         {/* Footer */}
         <footer className="text-center text-xs text-gray-400 pb-8 space-y-1">
+          <div className="flex justify-center gap-4 mb-2">
+            <a href="/howto" className="text-indigo-400 hover:underline">使い方・機能一覧</a>
+            <a href="/privacy" className="text-indigo-400 hover:underline">プライバシーポリシー</a>
+          </div>
           <p>
             ファイルはブラウザ内で処理され、クラウドへのアップロードは行われません
           </p>
